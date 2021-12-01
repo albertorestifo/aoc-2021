@@ -22,10 +22,14 @@
 ;; For the second part, we need to accumulate the readings into a set of size 3
 (define (sliding-window data [results empty])
   (with-handlers
+      ; If we're not able to take 3 elements, we traversed all the values. Return the final list.
       ([exn:fail:contract?
         (lambda (exn) (flatten results))])
+    ; Tail-recursive call to compute the next segment
     (sliding-window
+     ; Consume the first element from the list
      (rest data)
+     ; Compute the result by appending to the list the sum of the next 3 elements
      (list results (apply + (take data 3))))))
 
 ;; To solve part 2 we simply run the result of the sliding-window to the previous function
