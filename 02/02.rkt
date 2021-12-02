@@ -33,27 +33,28 @@
     [amount <- integer/p]
     (pure (cons instruction amount))))
 
-;; Parse a command line into a (x y) movement instruction
+;; Structure to track the position of the submarine
+(struct posn (x y z))
+
+;; Parse a command line into an instruction
 (define (parse-command line)
-  (match (parse-result! (parse-string command/p line))
-    [(cons 'up val) (cons (- val) 0)]
-    [(cons 'down val) (cons val 0)]
-    [(cons 'forward val) (cons 0 val)]))
+  (parse-result! (parse-string command/p line)))
 
 ;; Parse the instructions files and returns a list of movements
-(define movements
+(define instructions
   (map parse-command (file->lines "02/input")))
 
-;; Calculates the final position by applying the movements to a starting position of (0 0)
-(define (calculate-position movements)
-  (for/fold ([position (cons 0 0)])
-            ([movement movements])
-    (cons
-     (+ (car movement) (car position))
-     (+ (cdr movement) (cdr position)))))
+;; Part 1: Calculate position ignoring the z-azis
+(define (part-1-calculate-position instructions)
+  (for/fold ([position (posn 0 0 0)])
+            ([instruction instructions])
+    (match instruction
+      [(cons 'up val) (struct-copy posn position [x (- (posn-x position) val)])]
+      [(cons 'down val) (struct-copy posn position [x (+ (posn-x position) val)])]
+      [(cons 'forward val) (struct-copy posn position [y (+ (posn-y position) val)])])))
 
 ;; Calcualte the position of applying the movements
-(define end-location (calculate-position movements))
+(define part-1-end-location (part-1-calculate-position instructions))
 
 ;; Calculate the solution to part 1
-(printf "Part 1: ~a\n" (* (car end-location) (cdr end-location)))
+(printf "Part 1: ~a\n" (* (posn-y part-1-end-location) (posn-x part-1-end-location)))
