@@ -58,3 +58,20 @@
 
 ;; Calculate the solution to part 1
 (printf "Part 1: ~a\n" (* (posn-y part-1-end-location) (posn-x part-1-end-location)))
+
+;; Part 2: Calculate position taking into account also the z-axis
+(define (part-2-calculate-position instructions)
+  (for/fold ([position (posn 0 0 0)])
+            ([instruction instructions])
+    (match instruction
+      [(cons 'up val) (struct-copy posn position [z (- (posn-z position) val)])]
+      [(cons 'down val) (struct-copy posn position [z (+ (posn-z position) val)])]
+      [(cons 'forward val) (struct-copy posn position
+                                        [y (+ (posn-y position) val)]
+                                        [x (+ (posn-x position) (* val (posn-z position)))])])))
+
+;; Calcualte the Part 2 position of applying the movements
+(define part-2-end-location (part-2-calculate-position instructions))
+
+;; Calculate the solution to part 2
+(printf "Part 2: ~a\n" (* (posn-y part-2-end-location) (posn-x part-2-end-location)))
