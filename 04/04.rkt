@@ -34,14 +34,14 @@
 ;; Parse the lines into 5x5 board matrixes
 (define (create-boards lines)
   (map
-   (lambda (board-cells)
+   (λ (board-cells)
      (list->matrix 5 5 board-cells))
    (group-cells (flatten (map parse-board-line lines)))))
 
 ;; Mark the passed number as drawn in the given board.
 (define (mark-in-board board n)
   (matrix-map
-   (lambda (c)
+   (λ (c)
      (if (equal? (cell-number c) n)
          (struct-copy cell c [drawn? true])
          c))
@@ -50,7 +50,7 @@
 ;; Returns true if all the cells in the list are marked as drawn
 (define (all-drawn? cells)
   (array-andmap
-   (lambda (c) (cell-drawn? c))
+   (λ (c) (cell-drawn? c))
    cells))
 
 ;; Returns true if the given board has a winnind row or column
@@ -70,9 +70,7 @@
 ;; Otherwhise recursive call to draw another number.
 (define (play-game numbers boards)
   (let* ([n (car numbers)]
-         [updated-boards (map
-                          (lambda (b) (mark-in-board b n))
-                          boards)]
+         [updated-boards (map (λ (b) (mark-in-board b n)) boards)]
          [winning-board (find-winning updated-boards)])
     (if winning-board
         (values n winning-board)
@@ -93,6 +91,37 @@
                 [(u-count) (sum-unmarked w-board)])
     (* u-count w-number)))
 
-;; Print the part 1 solutions
+;; Play the game, but loose:  draw a number from the sequence,
+;; check if any board won, and remove it, until we're left with
+;; no more boards, and that's the winning board.
+(define (loose-game numbers boards [lw-b null] [lw-n null])
+  (let* ([n (car numbers)]
+         [updated-boards (map (λ (b) (mark-in-board b n)) boards)]
+         [winning-board (find-winning updated-boards)])
+    (printf "boards length: ~a\tnumbers lenght: ~a\n" (length boards) (length numbers))
+    (if winning-board
+        ;; This is the last winning board when either:
+        ;; - There is only one board left
+        ;; - There are no more numbers to draw
+        (if (or (equal? 1 (length boards)) (equal? 1 (length numbers)))
+            (values n winning-board)
+            ;; Otherwhise we can continue the game, minus the winning board
+            (loose-game (cdr numbers) (remove winning-board updated-boards) winning-board n))
+        ;; If there is no winning board, then continue the game
+        (loose-game (cdr numbers) updated-boards lw-b lw-n))))
+
+(define (part-2 file-path)
+  (let*-values ([(lines) (parse-file file-path)]
+                [(drawn-numbers) (parse-drawn-numbers (car lines))]
+                [(boards) (create-boards (cdr lines))]
+                [(w-number w-board) (loose-game drawn-numbers boards)]
+                [(u-count) (sum-unmarked w-board)])
+    (* u-count w-number)))
+
+;; Print the part 2 solutions
 (printf "[TEST] Part 1: ~a\n" (part-1 "04/test"))
 (printf "[REAL] Part 1: ~a\n" (part-1 "04/input"))
+
+;; Print the part 2 solutions
+(printf "[TEST] Part 2: ~a\n" (part-2 "04/test"))
+(printf "[REAL] Part 2: ~a\n" (part-2 "04/input"))
