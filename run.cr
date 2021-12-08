@@ -29,6 +29,7 @@ end
 
 solvers = {
   "06" => Day06,
+  "07" => Day07,
 }
 
 unless solvers[selected_day]?
